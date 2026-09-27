@@ -1,0 +1,15 @@
+# Intermediate and export outputs
+temp/
+output/
+clover_export/output/
+
+# Logs and environment
+*.log
+.env
+.env.local
+
+# OS and editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -47,6 +47,10 @@ Each final CSV contains exactly **4 rows of pure comma-separated numbers** witho
 * Covers as many columns as elapsed days in the period (e.g. 7 columns).
 * Missing dates (like today, which is not downloaded) automatically default to `0.00`.
 
+## Missing Data and Manual Reconciliation
+
+This pipeline is designed for a personal workflow and prioritizes producing a usable final file. During merging, a missing daily tender CSV, a missing sales or tips row/date column, or an amount that cannot be parsed is filled with `0.00`. As a result, `0.00` in the output may mean either a true zero or missing/unreadable data; the file does not distinguish between them. Independently reconcile the final report against your paper records before using it downstream.
+
 ## Usage
 
 ### Run the entire pipeline (Steps 1, 2, and 3):

@@ -172,7 +172,41 @@ export async function mergeReports() {
   await fs.mkdir(FINAL_OUTPUT_DIR, { recursive: true });
 
   const files = await fs.readdir(SALES_REPORT_DIR);
-  const reportFiles = files
+  let reportFiles = files
+    .filter(f => f.endsWith('_Sales_Report.csv'))
+    .sort();
+
+  // Find all start dates that already have a full cycle report
+  const fullStarts = new Set(
+    reportFiles
+      .filter(f => !f.startsWith('PARTIAL_'))
+      .map(f => f.match(/^(\d{4}-\d{2}-\d{2})_/)?.[1])
+      .filter(Boolean)
+  );
+
+  // Clean up obsolete PARTIAL_ files in SALES_REPORT_DIR and FINAL_OUTPUT_DIR
+  for (const f of reportFiles) {
+    if (f.startsWith('PARTIAL_')) {
+      const startDate = f.match(/^PARTIAL_(\d{4}-\d{2}-\d{2})_/)?.[1];
+      if (startDate && fullStarts.has(startDate)) {
+        try { await fs.unlink(path.join(SALES_REPORT_DIR, f)); } catch (_) {}
+      }
+    }
+  }
+
+  const finalFiles = await fs.readdir(FINAL_OUTPUT_DIR);
+  for (const f of finalFiles) {
+    if (f.startsWith('PARTIAL_')) {
+      const startDate = f.match(/^PARTIAL_(\d{4}-\d{2}-\d{2})_/)?.[1];
+      if (startDate && fullStarts.has(startDate)) {
+        try { await fs.unlink(path.join(FINAL_OUTPUT_DIR, f)); } catch (_) {}
+      }
+    }
+  }
+
+  // Refresh reportFiles after cleanup
+  const activeFiles = await fs.readdir(SALES_REPORT_DIR);
+  reportFiles = activeFiles
     .filter(f => f.endsWith('_Sales_Report.csv'))
     .sort();
 

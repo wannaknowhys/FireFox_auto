@@ -31,7 +31,9 @@ function getNextCycle(latestEndDateStr) {
   const now = new Date();
   const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 0);
 
-  const isPartial = fullEnd.getTime() > todayEnd.getTime();
+  // A 14-day cycle is only complete after day 14 has fully passed (i.e. starting from day 15).
+  // If fullEnd is today or in the future, today is still in progress, so it must be PARTIAL.
+  const isPartial = fullEnd.getTime() >= todayEnd.getTime();
   const effectiveEnd = isPartial ? todayEnd : fullEnd;
 
   return {
@@ -178,10 +180,11 @@ async function exportSinglePeriod(client, contextId, cycle, merchantId) {
     throw new Error('Download detection timed out for period ' + cycle.startDateStr);
   }
 
-  if (cycle.isPartial) {
-    const existing = await fs.readdir(OUTPUT_DIR);
-    for (const f of existing) {
-      if (f.startsWith('PARTIAL_') && f.endsWith('.csv')) {
+  // Clean up any stale partial files for this cycle or older partials
+  const existing = await fs.readdir(OUTPUT_DIR);
+  for (const f of existing) {
+    if (f.startsWith('PARTIAL_') && f.endsWith('.csv')) {
+      if (cycle.isPartial || f.startsWith(`PARTIAL_${cycle.startDateStr}_`)) {
         try { await fs.unlink(path.join(OUTPUT_DIR, f)); } catch (_) {}
       }
     }
